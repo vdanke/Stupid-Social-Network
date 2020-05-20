@@ -6,8 +6,10 @@ import com.step.stupid.social.network.model.User;
 import com.step.stupid.social.network.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import javax.annotation.security.RolesAllowed;
 import javax.validation.Valid;
 
 @RestController
@@ -23,6 +25,7 @@ public class UserController {
     }
 
     @PutMapping
+    @RolesAllowed({"ROLE_ADMIN", "ROLE_USER"})
     public UserUpdateResponse updateUser(@Valid @RequestBody UserUpdateRequest userUpdateRequest) {
         return userService.update(userUpdateRequest);
     }
