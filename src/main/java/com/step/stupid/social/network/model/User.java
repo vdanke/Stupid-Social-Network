@@ -1,5 +1,6 @@
 package com.step.stupid.social.network.model;
 
+import com.step.stupid.social.network.service.validation.EmailConstraint;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -23,10 +24,11 @@ public class User {
     @Column(name = "id")
     private UUID id;
 
-    @Size(min = 5, max = 254, message = "Username is not fitted, check max min length")
+    @EmailConstraint(min = 20, max = 200, message = "Organization email is not valid")
     @Column(name = "username", unique = true)
     private String username;
 
+    @Size(min = 5, max = 1024, message = "Password is nov fitted, check max min length")
     @Column(name = "password", length = 1024)
     private String password;
 

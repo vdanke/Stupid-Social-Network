@@ -23,13 +23,13 @@ public class StupidSocialNetworkApplication {
 	public CommandLineRunner commandLineRunner(UserRepository userRepository) {
 		return args -> {
 			User first = User.builder()
-					.username("first@mail.ru")
-					.password("first")
+					.username("firstgooduser@mail.ru")
+					.password("firstuser")
 					.authorities(Collections.singleton(Role.ROLE_USER))
 					.build();
 			User second = User.builder()
-					.username("second@mail.ru")
-					.password("second")
+					.username("secondgooduser@mail.ru")
+					.password("seconduser")
 					.authorities(Collections.singleton(Role.ROLE_ADMIN))
 					.build();
 			userRepository.saveAll(Arrays.asList(first, second)).forEach(user -> {
