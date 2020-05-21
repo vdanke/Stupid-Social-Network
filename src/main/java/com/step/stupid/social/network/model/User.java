@@ -37,4 +37,8 @@ public class User {
     @CollectionTable(name = "authorities", joinColumns = @JoinColumn(name = "user_id"))
     @Enumerated(EnumType.STRING)
     private Set<GrantedAuthority> authorities;
+
+    @Transient
+    @OurAutowired
+    private Role role;
 }
