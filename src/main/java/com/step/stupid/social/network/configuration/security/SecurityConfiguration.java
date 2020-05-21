@@ -1,5 +1,7 @@
 package com.step.stupid.social.network.configuration.security;
 
+import com.step.stupid.social.network.service.impl.UserDetailsServiceImpl;
+import com.step.stupid.social.network.service.jwt.TokenProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -16,6 +18,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 
 @Configuration
@@ -28,7 +31,8 @@ import org.springframework.web.servlet.config.annotation.CorsRegistry;
 @RequiredArgsConstructor
 public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 
-    private UserDetailsService userDetailsService;
+    private UserDetailsServiceImpl userDetailsService;
+    private TokenProvider tokenProvider;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -38,8 +42,19 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
     }
 
     @Bean(BeanIds.AUTHENTICATION_MANAGER)
+    @Override
     public AuthenticationManager authenticationManagerBean() throws Exception {
         return super.authenticationManagerBean();
+    }
+
+    @Bean
+    public TokenAuthenticationFilter tokenAuthenticationFilter() {
+        TokenAuthenticationFilter tokenAuthenticationFilter = new TokenAuthenticationFilter();
+
+        tokenAuthenticationFilter.setTokenProvider(tokenProvider);
+        tokenAuthenticationFilter.setUserDetailsService(userDetailsService);
+
+        return tokenAuthenticationFilter;
     }
 
     @Override
@@ -88,12 +103,17 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
                 .logout()
                 .permitAll();
 
+        http.addFilterBefore(tokenAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
         http.csrf().disable();
     }
 
     @Autowired
-    public void setUserDetailsService(
-            @Qualifier(value = "userDetailsServiceImpl") UserDetailsService userDetailsService) {
+    public void setUserDetailsService(UserDetailsServiceImpl userDetailsService) {
         this.userDetailsService = userDetailsService;
+    }
+
+    @Autowired
+    public void setTokenProvider(TokenProvider tokenProvider) {
+        this.tokenProvider = tokenProvider;
     }
 }

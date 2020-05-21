@@ -2,10 +2,11 @@ package com.step.stupid.social.network.dto.user.response;
 
 import lombok.Data;
 
+import java.time.LocalDateTime;
+
 @Data
 public class UserLoginResponse {
 
-    private String id;
-    private String username;
+    private LocalDateTime tokenCreationTime;
     private String token;
 }

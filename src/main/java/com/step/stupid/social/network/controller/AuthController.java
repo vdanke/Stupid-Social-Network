@@ -22,6 +22,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
+import javax.validation.constraints.NotBlank;
+import java.time.LocalDateTime;
 
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -45,22 +47,21 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody UserLoginRequest loginRequest) {
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        loginRequest.getUsername(),
-                        loginRequest.getPassword()
-                )
-        );
+        final String username = loginRequest.getUsername();
+        final String password = loginRequest.getPassword();
 
-        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+        UsernamePasswordAuthenticationToken authenticationToken =
+                new UsernamePasswordAuthenticationToken(username, password);
+
+        Authentication authentication = authenticationManager.authenticate(authenticationToken);
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
         String token = "Bearer " + tokenProvider.createToken(authentication);
 
         UserLoginResponse userLoginResponse = new UserLoginResponse();
-        userLoginResponse.setId(userDetails.getId().toString());
-        userLoginResponse.setUsername(userDetails.getUsername());
+
+        userLoginResponse.setTokenCreationTime(LocalDateTime.now());
         userLoginResponse.setToken(token);
 
         return new ResponseEntity<>(userLoginResponse, HttpStatus.OK);

@@ -10,9 +10,13 @@ import org.springframework.context.annotation.PropertySources;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
+import javax.servlet.http.HttpServletRequest;
 import java.time.Duration;
 import java.util.Date;
+import java.util.Optional;
+import java.util.UUID;
 
 @Service
 //@PropertySources({
@@ -45,6 +49,28 @@ public class TokenProvider {
                 .setExpiration(expiration)
                 .signWith(SignatureAlgorithm.HS512, appProperties.getAuth().getToken())
                 .compact();
+    }
+
+    public UUID getIdFromToken(String token) {
+        Claims body = Jwts.parser()
+                .setSigningKey(appProperties.getAuth().getToken())
+                .parseClaimsJws(token)
+                .getBody();
+
+        String subject = body.getSubject();
+
+        return UUID.fromString(subject);
+    }
+
+    public Optional<String> getTokenFromRequest(HttpServletRequest request) {
+        int bearerTokenStartsFrom = 7;
+
+        String bearerToken = request.getHeader("Authorization");
+
+        if (!StringUtils.isEmpty(bearerToken) && bearerToken.startsWith("Bearer")) {
+            return Optional.of(bearerToken.substring(bearerTokenStartsFrom, bearerToken.length()));
+        }
+        return Optional.empty();
     }
 
     public boolean validateToken(String authToken) {
