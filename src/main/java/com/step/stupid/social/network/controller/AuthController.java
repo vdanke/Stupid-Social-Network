@@ -16,10 +16,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
@@ -45,7 +42,10 @@ public class AuthController {
         return userService.save(registrationRequest);
     }
 
-    @PostMapping("/login")
+    @PostMapping(path = "/login",
+                consumes = MediaType.APPLICATION_JSON_VALUE,
+                produces = MediaType.APPLICATION_JSON_VALUE
+    )
     public ResponseEntity<?> login(@Valid @RequestBody UserLoginRequest loginRequest) {
         final String username = loginRequest.getUsername();
         final String password = loginRequest.getPassword();
@@ -65,5 +65,10 @@ public class AuthController {
         userLoginResponse.setToken(token);
 
         return new ResponseEntity<>(userLoginResponse, HttpStatus.OK);
+    }
+
+    @GetMapping("/confirm/{confirmationCode}")
+    public ResponseEntity<?> confirmAccount(@PathVariable(name = "confirmationCode") String code) {
+        return userService.confirmExistUser(code);
     }
 }

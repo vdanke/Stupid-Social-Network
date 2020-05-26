@@ -12,16 +12,18 @@ public class UserDetailsImpl implements UserDetails {
     private UUID id;
     private String username;
     private String password;
+    private Boolean isEnabled;
     private Set<GrantedAuthority> authorities;
 
     public UserDetailsImpl() {
     }
 
-    public UserDetailsImpl(UUID id, String username, String password, Set<GrantedAuthority> authorities) {
+    public UserDetailsImpl(UUID id, String username, String password, Set<GrantedAuthority> authorities, Boolean isEnabled) {
         this.id = id;
         this.username = username;
         this.password = password;
         this.authorities = authorities;
+        this.isEnabled = isEnabled;
     }
 
     public static UserDetailsImpl create(User user) {
@@ -29,7 +31,8 @@ public class UserDetailsImpl implements UserDetails {
             user.getId(),
             user.getUsername(),
             user.getPassword(),
-            user.getAuthorities()
+            user.getAuthorities(),
+            user.getIsEnabled()
         );
     }
 
@@ -65,7 +68,7 @@ public class UserDetailsImpl implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return true;
+        return isEnabled;
     }
 
     public UUID getId() {

@@ -16,4 +16,6 @@ public interface UserService {
     UserUpdateResponse update(UserUpdateRequest userUpdateRequest);
 
     ResponseEntity<?> delete(String id);
+
+    ResponseEntity<?> confirmExistUser(String code);
 }

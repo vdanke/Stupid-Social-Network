@@ -33,6 +33,12 @@ public class User {
     @Column(name = "password", length = 1024)
     private String password;
 
+    @Column(name = "enabled")
+    private Boolean isEnabled;
+
+    @Column(name = "confirm_code")
+    private String confirmCode;
+
     @ElementCollection(targetClass = Role.class, fetch = FetchType.EAGER)
     @CollectionTable(name = "authorities", joinColumns = @JoinColumn(name = "user_id"))
     @Enumerated(EnumType.STRING)

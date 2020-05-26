@@ -7,10 +7,13 @@ import com.step.stupid.social.network.dto.user.response.UserUpdateResponse;
 import com.step.stupid.social.network.exception.NotFoundException;
 import com.step.stupid.social.network.model.User;
 import com.step.stupid.social.network.repository.UserRepository;
+import com.step.stupid.social.network.service.MailService;
 import com.step.stupid.social.network.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Propagation;
@@ -23,16 +26,36 @@ import java.util.UUID;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
+    private final MailService mailService;
+    private final PasswordEncoder passwordEncoder;
+
+    @Value("${server.host}")
+    private String host;
+    @Value("${server.port}")
+    private int port;
 
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW, isolation = Isolation.READ_COMMITTED)
     public UserRegistrationResponse save(UserRegistrationRequest registrationRequest) {
+        final String subject = "Welcome to our server";
+        final String address = host + ":" + port;
+        final String uniqueConfirmationCode = UUID.randomUUID().toString() + registrationRequest.getUsername();
+
+        String text = String.format("Hello there, great to see you here. To confirm your email follow the link bellow \n" +
+                "http://%s/api/v1/auth/confirm/%s", address, uniqueConfirmationCode);
+
+        String passwordAfterEncoding = passwordEncoder.encode(registrationRequest.getPassword());
+
         User user = User.builder()
                 .username(registrationRequest.getUsername())
-                .password(registrationRequest.getPassword())
+                .password(passwordAfterEncoding)
+                .isEnabled(false)
+                .confirmCode(uniqueConfirmationCode)
                 .build();
 
         User afterSaving = userRepository.save(user);
+
+        mailService.send(registrationRequest.getUsername(), subject, text);
 
         return UserRegistrationResponse.builder()
                 .id(afterSaving.getId().toString())
@@ -69,6 +92,25 @@ public class UserServiceImpl implements UserService {
         userRepository.delete(userIfExists);
 
         return new ResponseEntity<>("User successfully deleted", HttpStatus.OK);
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public ResponseEntity<?> confirmExistUser(String code) {
+        User user = userRepository.findByConfirmCode(code)
+                .orElseThrow(() -> new NotFoundException("Code is not correct, please try again"));
+
+        user.setConfirmCode(null);
+        user.setIsEnabled(true);
+
+        User userAfterSaving = userRepository.save(user);
+
+        UserUpdateResponse response = UserUpdateResponse.builder()
+                .id(userAfterSaving.getId().toString())
+                .username(userAfterSaving.getUsername())
+                .build();
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     private User getUserIfExists(UUID id) {
