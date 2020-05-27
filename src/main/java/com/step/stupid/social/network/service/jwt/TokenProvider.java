@@ -1,6 +1,7 @@
 package com.step.stupid.social.network.service.jwt;
 
 import com.step.stupid.social.network.configuration.AppProperties;
+import com.step.stupid.social.network.model.User;
 import com.step.stupid.social.network.model.UserDetailsImpl;
 import io.jsonwebtoken.*;
 import lombok.RequiredArgsConstructor;
@@ -45,6 +46,19 @@ public class TokenProvider {
 
         return Jwts.builder()
                 .setSubject(principal.getId().toString())
+                .setIssuedAt(now)
+                .setExpiration(expiration)
+                .signWith(SignatureAlgorithm.HS512, appProperties.getAuth().getToken())
+                .compact();
+    }
+
+    public String createToken(User user) {
+        Date now = new Date();
+        Date expiration = Date.from(now.toInstant()
+                .plus(Duration.ofHours(appProperties.getAuth().getExpiration())));
+
+        return Jwts.builder()
+                .setSubject(user.getId().toString())
                 .setIssuedAt(now)
                 .setExpiration(expiration)
                 .signWith(SignatureAlgorithm.HS512, appProperties.getAuth().getToken())

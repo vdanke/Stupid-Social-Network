@@ -39,6 +39,16 @@ public class User {
     @Column(name = "confirm_code")
     private String confirmCode;
 
+    private String provider;
+
+    private String fullName;
+
+    private String imageUrl;
+
+    private String gender;
+
+    private String locale;
+
     @ElementCollection(targetClass = Role.class, fetch = FetchType.EAGER)
     @CollectionTable(name = "authorities", joinColumns = @JoinColumn(name = "user_id"))
     @Enumerated(EnumType.STRING)

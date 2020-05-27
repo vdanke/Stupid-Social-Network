@@ -71,4 +71,14 @@ public class AuthController {
     public ResponseEntity<?> confirmAccount(@PathVariable(name = "confirmationCode") String code) {
         return userService.confirmExistUser(code);
     }
+
+    @GetMapping("/success")
+    public String getSuccessPage(@RequestParam(name = "token") String token) {
+        return token;
+    }
+
+    @GetMapping("/error")
+    public String getErrorPage(@RequestParam(name = "message") String message) {
+        return message;
+    }
 }
