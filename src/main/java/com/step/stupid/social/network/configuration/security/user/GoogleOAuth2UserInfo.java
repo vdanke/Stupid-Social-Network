@@ -6,8 +6,8 @@ import static com.step.stupid.social.network.util.ConstantUtil.*;
 
 public class GoogleOAuth2UserInfo extends OAuth2UserInfo {
 
-    public GoogleOAuth2UserInfo(Map<String, Object> attributes) {
-        super(attributes);
+    public GoogleOAuth2UserInfo(Map<String, Object> attributes, String providerId) {
+        super(attributes, providerId);
     }
 
     @Override

@@ -4,8 +4,8 @@ import java.util.Map;
 
 public class FacebookOAuth2UserInfo extends OAuth2UserInfo {
 
-    public FacebookOAuth2UserInfo(Map<String, Object> attributes) {
-        super(attributes);
+    public FacebookOAuth2UserInfo(Map<String, Object> attributes, String providerId) {
+        super(attributes, providerId);
     }
 
     @Override

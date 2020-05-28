@@ -11,8 +11,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
-import static com.step.stupid.social.network.util.ConstantUtil.REDIRECT_URL;
-
 @Component
 @RequiredArgsConstructor
 public class OAuth2AuthenticationFailureHandler extends SimpleUrlAuthenticationFailureHandler {
@@ -26,7 +24,7 @@ public class OAuth2AuthenticationFailureHandler extends SimpleUrlAuthenticationF
         String redirect = UriComponentsBuilder.newInstance()
                 .scheme("http")
                 .host("localhost:8888")
-                .path("/api/v1/auth/error")
+                .path("/auth/error")
                 .queryParam("message", exception.getLocalizedMessage())
                 .build()
                 .toUriString();

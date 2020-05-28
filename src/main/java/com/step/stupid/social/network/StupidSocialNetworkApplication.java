@@ -30,16 +30,15 @@ public class StupidSocialNetworkApplication {
 	@Bean
 	public CommandLineRunner commandLineRunner(UserRepository userRepository) {
 		return args -> {
-			User first = User.builder()
-					.username("firstgooduser@mail.ru")
-					.password(passwordEncoder.encode("firstuser"))
-					.authorities(Collections.singleton(Role.ROLE_USER))
-					.build();
-			User second = User.builder()
-					.username("secondgooduser@mail.ru")
-					.password(passwordEncoder.encode("seconduser"))
-					.authorities(Collections.singleton(Role.ROLE_ADMIN))
-					.build();
+			User first = new User();
+			first.setUsername("firstgooduser@mail.ru");
+			first.setPassword(passwordEncoder.encode("firstuser"));
+			first.setAuthorities(Collections.singleton(Role.ROLE_USER));
+			User second = new User();
+			first.setUsername("secondgooduser@mail.ru");
+			first.setPassword(passwordEncoder.encode("seconduser"));
+			first.setAuthorities(Collections.singleton(Role.ROLE_ADMIN));
+
 			userRepository.saveAll(Arrays.asList(first, second)).forEach(user -> {
 				log.info(user.getId().toString());
 			});

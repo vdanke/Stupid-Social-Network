@@ -10,6 +10,7 @@ import com.step.stupid.social.network.service.CookieOperation;
 import com.step.stupid.social.network.service.SerializationHelper;
 import com.step.stupid.social.network.service.jwt.TokenProvider;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
 import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser;
@@ -31,6 +32,7 @@ import static com.step.stupid.social.network.util.ConstantUtil.*;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
 
     private final HttpCookieOAuth2AuthorizationRequestRepository requestRepository;
@@ -41,7 +43,14 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
-        super.onAuthenticationSuccess(request, response, authentication);
+        String targetUrl = determineTargetUrl(request, response, authentication);
+
+        if (response.isCommitted()) {
+            log.info(String.format("Response already committed. Unable to redirect %s", targetUrl));
+            return;
+        }
+        clearAuthenticationAttributes(request, response);
+        getRedirectStrategy().sendRedirect(request, response, targetUrl);
     }
 
     @Override
@@ -51,18 +60,14 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
         OAuth2AuthorizationRequest oAuth2AuthorizationRequest = cookieOperation
                 .getCookie(request, OAUTH2_AUTHORIZATION_REQUEST_COOKIE_NAME)
                 .map(cookie -> serializationHelper.deserialize(cookie, OAuth2AuthorizationRequest.class))
-                .orElseThrow(() -> new OAuth2AuthorizationProcessingException("Authorization is empty"));
+                .orElseThrow(() -> {
+                    this.clearAuthenticationAttributes(request, response);
+                    return new OAuth2AuthorizationProcessingException("Authorization is empty");
+                });
 
-        Map<String, Object> googleAttributes = oAuth2AuthorizationRequest.getAttributes();
+        OAuth2UserInfo oAuth2ConcreteProviderUser = getOAuth2UserByProvider(oAuth2AuthorizationRequest, oAuth2User);
 
-        Map<String, Object> attributes = oAuth2User.getAttributes();
-        String providerId = (String) googleAttributes.get(PROVIDER_ID);
-
-        OAuth2UserInfo oAuth2ConcreteProviderUser = OAuth2UserInfoFactory.getUserInfoByConcreteProvider(providerId, attributes);
-
-        User user = getUserIfExists(oAuth2ConcreteProviderUser.getEmail())
-                .map(existUser -> updateOldOAuth2User(oAuth2ConcreteProviderUser, providerId, existUser))
-                .orElseGet(() -> registerOAuth2User(oAuth2ConcreteProviderUser, providerId));
+        User user = updateExistOrSaveNewOAuth2User(oAuth2ConcreteProviderUser);
 
         String token = tokenProvider.createToken(user);
 
@@ -73,10 +78,25 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
         return UriComponentsBuilder.newInstance()
                 .scheme("http")
                 .host("localhost:8888")
-                .path("/api/v1/auth" + redirectUrl)
+                .path("/auth" + redirectUrl)
                 .queryParam("token", token)
                 .build()
                 .toUriString();
+    }
+
+    private User updateExistOrSaveNewOAuth2User(OAuth2UserInfo oAuth2UserInfo) {
+        return getUserIfExists(oAuth2UserInfo.getEmail())
+                .map(existUser -> updateOldOAuth2User(oAuth2UserInfo, oAuth2UserInfo.getProviderId(), existUser))
+                .orElseGet(() -> registerOAuth2User(oAuth2UserInfo, oAuth2UserInfo.getProviderId()));
+    }
+
+    private OAuth2UserInfo getOAuth2UserByProvider(OAuth2AuthorizationRequest request, DefaultOidcUser oidcUser) {
+        Map<String, Object> googleAttributes = request.getAttributes();
+
+        Map<String, Object> attributes = oidcUser.getAttributes();
+        String providerId = (String) googleAttributes.get(REGISTRATION_ID);
+
+        return OAuth2UserInfoFactory.getUserInfoByConcreteProvider(providerId, attributes);
     }
 
     private User registerOAuth2User(OAuth2UserInfo oAuth2ConcreteProviderUser, String providerId) {
@@ -92,7 +112,7 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
         user.setFullName(oAuth2ConcreteProviderUser.getName());
         user.setLocale(oAuth2ConcreteProviderUser.getLocale());
 
-        return user;
+        return userRepository.save(user);
     }
 
     private User updateOldOAuth2User(OAuth2UserInfo oAuth2ConcreteProviderUser, String providerId, User existingUser) {
@@ -102,7 +122,7 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
         existingUser.setGender(oAuth2ConcreteProviderUser.getGender());
         existingUser.setLocale(oAuth2ConcreteProviderUser.getLocale());
 
-        return existingUser;
+        return userRepository.save(existingUser);
     }
 
     private Optional<User> getUserIfExists(String username) {

@@ -1,10 +1,7 @@
 package com.step.stupid.social.network.model;
 
 import com.step.stupid.social.network.service.validation.EmailConstraint;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
 
 import javax.persistence.*;
@@ -17,7 +14,7 @@ import java.util.UUID;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+//@Builder
 public class User {
 
     @Id
@@ -32,6 +29,8 @@ public class User {
     @Size(min = 5, max = 1024, message = "Password is nov fitted, check max min length")
     @Column(name = "password", length = 1024)
     private String password;
+
+    private int old;
 
     @Column(name = "enabled")
     private Boolean isEnabled;

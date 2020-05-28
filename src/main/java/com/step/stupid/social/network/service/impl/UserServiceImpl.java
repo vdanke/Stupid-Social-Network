@@ -5,6 +5,7 @@ import com.step.stupid.social.network.dto.user.request.UserUpdateRequest;
 import com.step.stupid.social.network.dto.user.response.UserRegistrationResponse;
 import com.step.stupid.social.network.dto.user.response.UserUpdateResponse;
 import com.step.stupid.social.network.exception.NotFoundException;
+import com.step.stupid.social.network.mapper.UserMapper;
 import com.step.stupid.social.network.model.User;
 import com.step.stupid.social.network.repository.UserRepository;
 import com.step.stupid.social.network.service.MailService;
@@ -28,6 +29,7 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final MailService mailService;
     private final PasswordEncoder passwordEncoder;
+    private final UserMapper userMapper;
 
     @Value("${server.host}")
     private String host;
@@ -44,23 +46,13 @@ public class UserServiceImpl implements UserService {
         String text = String.format("Hello there, great to see you here. To confirm your email follow the link bellow \n" +
                 "http://%s/api/v1/auth/confirm/%s", address, uniqueConfirmationCode);
 
-        String passwordAfterEncoding = passwordEncoder.encode(registrationRequest.getPassword());
-
-        User user = User.builder()
-                .username(registrationRequest.getUsername())
-                .password(passwordAfterEncoding)
-                .isEnabled(false)
-                .confirmCode(uniqueConfirmationCode)
-                .build();
+        User user = userMapper.requestToUser(registrationRequest, passwordEncoder);
 
         User afterSaving = userRepository.save(user);
 
         mailService.send(registrationRequest.getUsername(), subject, text);
 
-        return UserRegistrationResponse.builder()
-                .id(afterSaving.getId().toString())
-                .username(afterSaving.getUsername())
-                .build();
+        return userMapper.userToResponse(afterSaving);
     }
 
     @Override
@@ -68,11 +60,13 @@ public class UserServiceImpl implements UserService {
     public UserUpdateResponse update(UserUpdateRequest userUpdateRequest) {
         UUID userId = UUID.fromString(userUpdateRequest.getId());
 
-        User updateUser = User.builder()
-                .id(userId)
-                .username(userUpdateRequest.getUsername())
-                .password(userUpdateRequest.getPassword())
-                .build();
+        User updateUser = new User();
+
+//        User updateUser = User.builder()
+//                .id(userId)
+//                .username(userUpdateRequest.getUsername())
+//                .password(userUpdateRequest.getPassword())
+//                .build();
 
         User afterSaving = userRepository.save(updateUser);
 

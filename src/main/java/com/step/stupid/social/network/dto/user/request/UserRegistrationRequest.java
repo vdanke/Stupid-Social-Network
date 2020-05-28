@@ -16,4 +16,5 @@ public class UserRegistrationRequest {
     private String username;
     @Size(min = 5, max = 64, message = "Too short or too long password")
     private String password;
+    private int age;
 }
