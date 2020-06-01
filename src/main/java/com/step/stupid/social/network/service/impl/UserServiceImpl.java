@@ -12,6 +12,8 @@ import com.step.stupid.social.network.service.MailService;
 import com.step.stupid.social.network.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -23,13 +25,32 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.UUID;
 
 @Service
-@RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final MailService mailService;
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
+
+    public UserServiceImpl(UserRepository userRepository,
+                           MailService mailService,
+                           PasswordEncoder passwordEncoder,
+                           UserMapper userMapper) {
+        /*
+            AnnotationConfigApplicationContext and ClassPathXmlApplicationContext - бины берутся из контекста
+         */
+//        userRepository = new ClassPathXmlApplicationContext("beans.xml")
+//                .getBean("userRepository", UserRepository.class);
+//        mailService = new AnnotationConfigApplicationContext("beans.xml")
+//                .getBean("mailService", MailService.class);
+        /*
+        Java config - инжект через конструктор / сеттер / поле
+         */
+        this.userRepository = userRepository;
+        this.mailService = mailService;
+        this.passwordEncoder = passwordEncoder;
+        this.userMapper = userMapper;
+    }
 
     @Value("${server.host}")
     private String host;

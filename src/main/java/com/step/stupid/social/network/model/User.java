@@ -11,24 +11,17 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "users")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 //@Builder
-public class User {
+public class User extends BaseUser {
 
     @Id
     @GeneratedValue
     @Column(name = "id")
     private UUID id;
-
-    @EmailConstraint(min = 20, max = 200, message = "Organization email is not valid")
-    @Column(name = "username", unique = true)
-    private String username;
-
-    @Size(min = 5, max = 1024, message = "Password is nov fitted, check max min length")
-    @Column(name = "password", length = 1024)
-    private String password;
 
     private int old;
 
