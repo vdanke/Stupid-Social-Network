@@ -2,6 +2,7 @@ package com.step.stupid.social.network.controller;
 
 import com.step.stupid.social.network.dto.user.request.UserUpdateRequest;
 import com.step.stupid.social.network.dto.user.response.UserUpdateResponse;
+import com.step.stupid.social.network.factory.OperationSystem;
 import com.step.stupid.social.network.model.User;
 import com.step.stupid.social.network.model.UserDetailsImpl;
 import com.step.stupid.social.network.service.UserService;
@@ -23,6 +24,12 @@ import javax.validation.Valid;
 public class UserController {
 
     private final UserService userService;
+    private final OperationSystem operationSystem;
+
+    @GetMapping("/os")
+    public String getOS() {
+        return operationSystem.getOperationSystem();
+    }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteById(@PathVariable(name = "id") String id) {

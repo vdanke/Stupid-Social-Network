@@ -98,7 +98,8 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
                         "/login/**",
                         "/registration",
                         "/error",
-                        "/static/**"
+                        "/static/**",
+                        "/api/v1/user/**"
                 ).permitAll()
                 .antMatchers(AUTH_MATCHER, OAUTH2_MATCHER)
                 .permitAll()
