@@ -6,11 +6,16 @@ import com.step.stupid.social.network.dto.user.response.UserRegistrationResponse
 import com.step.stupid.social.network.dto.user.response.UserUpdateResponse;
 import com.step.stupid.social.network.exception.NotFoundException;
 import com.step.stupid.social.network.mapper.UserMapper;
+import com.step.stupid.social.network.mapper.jsonb.JsonMapper;
+import com.step.stupid.social.network.model.Role;
 import com.step.stupid.social.network.model.User;
+import com.step.stupid.social.network.notification.NotificationEvent;
+import com.step.stupid.social.network.notification.NotificationType;
 import com.step.stupid.social.network.repository.UserRepository;
 import com.step.stupid.social.network.service.MailService;
 import com.step.stupid.social.network.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
@@ -22,7 +27,10 @@ import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
 import java.util.UUID;
+
+import static com.step.stupid.social.network.configuration.rabbitmq.RabbitMQConfiguration.EXCHANGE;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -31,11 +39,15 @@ public class UserServiceImpl implements UserService {
     private final MailService mailService;
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
+    private final RabbitTemplate rabbitTemplate;
+    private final JsonMapper jsonMapper;
 
     public UserServiceImpl(UserRepository userRepository,
                            MailService mailService,
                            PasswordEncoder passwordEncoder,
-                           UserMapper userMapper) {
+                           UserMapper userMapper,
+                           RabbitTemplate rabbitTemplate,
+                           JsonMapper jsonMapper) {
         /*
             AnnotationConfigApplicationContext and ClassPathXmlApplicationContext - бины берутся из контекста
          */
@@ -50,6 +62,8 @@ public class UserServiceImpl implements UserService {
         this.mailService = mailService;
         this.passwordEncoder = passwordEncoder;
         this.userMapper = userMapper;
+        this.rabbitTemplate = rabbitTemplate;
+        this.jsonMapper = jsonMapper;
     }
 
     @Value("${server.host}")
@@ -69,7 +83,21 @@ public class UserServiceImpl implements UserService {
 
         User user = userMapper.requestToUser(registrationRequest, passwordEncoder);
 
+        user.setIsEnabled(true);
+        user.setAuthorities(Collections.singleton(Role.ROLE_USER));
+
         User afterSaving = userRepository.save(user);
+
+        NotificationEvent notificationEvent = new NotificationEvent();
+
+        notificationEvent.setSubject("Registration user");
+        notificationEvent.setText(String.format("User is registered, ID is %s", afterSaving.getId().toString()));
+        notificationEvent.setNotificationType(NotificationType.USER.toString());
+        notificationEvent.setId(afterSaving.getId().toString());
+
+        String notification = jsonMapper.serializeNotificationEventToString(notificationEvent);
+
+        rabbitTemplate.convertAndSend(EXCHANGE, "my-exchange.first.second", notification);
 
         mailService.send(registrationRequest.getUsername(), subject, text);
 
