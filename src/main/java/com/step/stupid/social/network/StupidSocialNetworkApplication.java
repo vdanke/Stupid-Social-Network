@@ -35,18 +35,23 @@ public class StupidSocialNetworkApplication {
 			first.setPassword(passwordEncoder.encode("firstuser"));
 			first.setAuthorities(Collections.singleton(Role.ROLE_USER));
 			User second = new User();
-			first.setUsername("secondgooduser@mail.ru");
-			first.setPassword(passwordEncoder.encode("seconduser"));
-			first.setAuthorities(Collections.singleton(Role.ROLE_ADMIN));
+			second.setUsername("secondgooduser@mail.ru");
+			second.setPassword(passwordEncoder.encode("seconduser"));
+			second.setAuthorities(Collections.singleton(Role.ROLE_ADMIN));
 
 			userRepository.saveAll(Arrays.asList(first, second)).forEach(user -> {
 				log.info(user.getId().toString());
+				log.info(user.getPassword());
 			});
 		};
 	}
 
 	public static void main(String[] args) {
-		SpringApplication.run(StupidSocialNetworkApplication.class, args);
+		SpringApplication springApplication = new SpringApplication(StupidSocialNetworkApplication.class);
+
+//		springApplication.setAdditionalProfiles("dev");
+
+		springApplication.run(args);
 	}
 
 }
