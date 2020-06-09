@@ -4,14 +4,14 @@ import lombok.Getter;
 import lombok.Setter;
 
 import javax.persistence.*;
-
-@Entity
-@Table
-@Getter
-@Setter
+//
+//@Entity
+//@Table
+//@Getter
+//@Setter
 public class CourseRating {
 
-    @EmbeddedId
+//    @EmbeddedId
     private CompositeUserCourseKey embeddedId;
 
     @ManyToOne

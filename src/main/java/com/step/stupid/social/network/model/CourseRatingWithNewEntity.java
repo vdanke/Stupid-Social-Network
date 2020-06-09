@@ -6,7 +6,7 @@ import lombok.Data;
 import javax.persistence.*;
 
 @Entity
-@Table
+@Table(name = "course_rating")
 @Data
 public class CourseRatingWithNewEntity {
 

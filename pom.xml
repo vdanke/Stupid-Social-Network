@@ -64,6 +64,10 @@
 			<optional>true</optional>
 		</dependency>
 		<dependency>
+			<groupId>org.flywaydb</groupId>
+			<artifactId>flyway-core</artifactId>
+		</dependency>
+		<dependency>
 			<groupId>com.h2database</groupId>
 			<artifactId>h2</artifactId>
 		</dependency>
@@ -151,6 +155,20 @@
 							-Amapstruct.defaultComponentModel=spring
 						</compilerArg>
 					</compilerArgs>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.flywaydb</groupId>
+				<artifactId>flyway-maven-plugin</artifactId>
+				<version>6.4.1</version>
+				<configuration>
+					<locations>classpath:/db/migration/production</locations>
+					<user>user</user>
+					<password>userpassword</password>
+					<url>jdbc:postgresql://localhost:5432/social</url>
+					<schemas>
+						<schema>public</schema>
+					</schemas>
 				</configuration>
 			</plugin>
 		</plugins>

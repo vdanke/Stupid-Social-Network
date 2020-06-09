@@ -6,9 +6,9 @@ import javax.persistence.Column;
 import javax.persistence.Embeddable;
 import java.io.Serializable;
 import java.util.UUID;
-
-@Embeddable
-@Data
+//
+//@Embeddable
+//@Data
 public class CompositeUserCourseKey implements Serializable {
 
     @Column(name = "course_id")
